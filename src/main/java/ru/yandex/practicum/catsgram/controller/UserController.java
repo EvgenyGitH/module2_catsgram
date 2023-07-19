@@ -2,10 +2,13 @@ package ru.yandex.practicum.catsgram.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.catsgram.exceptions.InvalidEmailException;
 import ru.yandex.practicum.catsgram.exceptions.UserAlreadyExistException;
+import ru.yandex.practicum.catsgram.model.Post;
 import ru.yandex.practicum.catsgram.model.User;
+import ru.yandex.practicum.catsgram.service.UserService;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,78 +17,35 @@ import java.util.HashMap;
 @RequestMapping("/users")
 
 public class UserController {
-    HashMap <String, User> users = new HashMap<>();
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+    UserService userService;
+    @Autowired
+    public UserController (UserService userService){
+        this.userService = userService;
+    }
+
 
     @GetMapping
     public Collection<User> findAll () {
-        log.debug("Текущее количество User: {}", users.size());
-        return users.values();
+  //      log.debug("Текущее количество User: {}", users.size());
+        return userService.findAll();
     }
 
     @PostMapping
-    public User create (@RequestBody User user){
-        try {
-            if(user.getEmail().equals(null) || user.getEmail().isEmpty()){
-                throw new InvalidEmailException("В переданных данных отсутствует адрес электронной почты");
-            }else{
-                if (users.isEmpty()){
-                    users.put(user.getEmail(),user);
-
-                }else {
-                    for(String userId : users.keySet()){
-                        if(userId.equals(user.getEmail())){
-                            throw new UserAlreadyExistException("Пользователь с указанным адресом электронной почты уже был добавлен ранее");
-                        }else {
-                            users.put(user.getEmail(),user);
-                        }
-                    }
-                }
-            }
-        }catch (UserAlreadyExistException exception){
-            System.out.println(exception.getMessage());
-        }
-        catch (InvalidEmailException exception){
-            System.out.println(exception.getMessage());
-        }
-        log.debug("Текущее количество User: {}", user);
-        return user;
+    public User create (@RequestBody User user) throws UserAlreadyExistException, InvalidEmailException {
+        return userService.create(user);
     }
 
     @PutMapping
-    public User createUpdate (@RequestBody User user){
-        try {
-            if(user.getEmail().equals(null) || user.getEmail().isEmpty()){
-                throw new InvalidEmailException("В переданных данных отсутствует адрес электронной почты");
-            }else{
-              /*  if (users.isEmpty()){
-                    users.put(user.getEmail(),user);
-                }else {
-                   /* for(String userId : users.keySet()){
-                        if(userId.equals(user.getEmail())){
-                            throw new UserAlreadyExistException("Пользователь с указанным адресом электронной почты уже был добавлен ранее");
-                        }else {
-                            users.put(user.getEmail(),user);
-                        }
-                    }*/
-
-                    users.put(user.getEmail(),user);
-                }
-
-
-
-
-       /* }catch (UserAlreadyExistException exception){
-            System.out.println(exception.getMessage());*/
-        }
-        catch (InvalidEmailException exception){
-            System.out.println(exception.getMessage());
-        }
-        log.debug("Текущее количество User: {}", user);
-        return user;
+    public User updateUser (@RequestBody User user) throws InvalidEmailException {
+        return userService.updateUser(user);
     }
 
 
+
+    @GetMapping("/user/{userMail}")
+    public User getUserByEmail(@PathVariable ("userMail") String userMail) {
+        return userService.findUserByEmail(userMail);
+    }
 }
 
 
